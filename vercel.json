@@ -22,9 +22,6 @@
         "src": "/best.onnx",
         "use": "@now/static"
       }
-    ],
-    "static": {
-      "public": "."
-    }
+    ]
   }
   
