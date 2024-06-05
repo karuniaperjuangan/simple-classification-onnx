@@ -65,6 +65,9 @@
     const outputData = outputTensor.data;
     
     const maxConfidenceIndex = outputData.indexOf(Math.max(...outputData));
+    if(Math.max(...outputData)<0.6){
+        document.getElementById('classification-result').textContent = "Classification Result: " + "Gambar tidak valid. Mohon ambil ulang gambar bayi!";
+    }
     const message = classDict[maxConfidenceIndex] || "No valid prediction";
     document.getElementById('classification-result').textContent = "Classification Result: " + message;
 }
