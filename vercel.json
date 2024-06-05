@@ -1,0 +1,30 @@
+{
+    "version": 2,
+    "routes": [
+      {
+        "src": "/",
+        "dest": "/index.html"
+      },
+      {
+        "src": "/best.onnx",
+        "dest": "/best.onnx",
+        "headers": {
+          "Content-Type": "application/octet-stream"
+        }
+      }
+    ],
+    "builds": [
+      {
+        "src": "/index.html",
+        "use": "@now/static"
+      },
+      {
+        "src": "/best.onnx",
+        "use": "@now/static"
+      }
+    ],
+    "static": {
+      "public": "."
+    }
+  }
+  
