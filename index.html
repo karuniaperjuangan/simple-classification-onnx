@@ -46,9 +46,9 @@
     <script>
         let session;
         const classDict = {
-            0: "Bayi sepertinya mengalami kelelahan.\nPerbanyak istirahat dan makan yang cukup.",
+            0: "Bayi mengalami demam.\nSegera beri obat penurun panas",
             1: "Bayi menangis tanda terdapat keadaan yang tidak nyaman.\nHal ini bisa disebabkan rasa nyeri atau sesak pada bayi.\nHubungi dokter segera!",
-            2: "Bayi mengalami demam.\nSegera beri obat penurun panas",
+            2: "Bayi sepertinya mengalami kelelahan.\nPerbanyak istirahat dan makan yang cukup.",
             3: "Bayi dalam foto terlihat sehat."
         };
 
@@ -94,7 +94,7 @@
             const outputData = outputTensor.data;
 
             const maxConfidenceIndex = outputData.indexOf(Math.max(...outputData));
-            if (Math.max(...outputData) < 0.45) {
+            if (Math.max(...outputData) < 0.35) {
                 document.getElementById('classification-result').textContent = "Classification Result: " + "Gambar tidak valid. Mohon ambil ulang gambar bayi!";
             }
             else {
