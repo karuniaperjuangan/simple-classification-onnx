@@ -46,15 +46,16 @@
     <script>
         let session;
         const classDict = {
-            0: "Bayi mengalami demam.\nSegera beri obat penurun panas",
+            0: "Bayi sepertinya mengalami kelelahan.\nPerbanyak istirahat dan makan yang cukup.",
             1: "Bayi menangis tanda terdapat keadaan yang tidak nyaman.\nHal ini bisa disebabkan rasa nyeri atau sesak pada bayi.\nHubungi dokter segera!",
-            2: "Bayi sepertinya mengalami kelelahan.\nPerbanyak istirahat dan makan yang cukup.",
+            2: "Bayi mengalami demam.\nSegera beri obat penurun panas",
             3: "Bayi dalam foto terlihat sehat."
         };
 
         async function loadModel() {
+            const sessionOption = { executionProviders: ['wasm', 'webgl'] };
             console.log('Loading ONNX model...');
-            session = await ort.InferenceSession.create('/best.onnx');
+            session = await ort.InferenceSession.create('/best.onnx', sessionOption);
             console.log('Model loaded');
         }
 
@@ -87,14 +88,16 @@
 
         async function classifyImage(img) {
             const tensor = preprocessImage(img);
+            console.log('Running inference...');
+            console.log('Tensor dims:', tensor.dims);
             const outputs = await session.run({ [session.inputNames[0]]: tensor });
             const outputTensor = outputs[Object.keys(outputs)[0]]; // Assuming model has one output
 
             // Access the data from the tensor
             const outputData = outputTensor.data;
-
+            console.log('Output data:', outputData);
             const maxConfidenceIndex = outputData.indexOf(Math.max(...outputData));
-            if (Math.max(...outputData) < 0.35) {
+            if (Math.max(...outputData) < 0.45) {
                 document.getElementById('classification-result').textContent = "Classification Result: " + "Gambar tidak valid. Mohon ambil ulang gambar bayi!";
             }
             else {
@@ -109,30 +112,25 @@
             const width = 640;
             const height = 640;
             const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
             canvas.width = width;
             canvas.height = height;
+            const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             const imageData = ctx.getImageData(0, 0, width, height);
 
-            // Flatten the pixel data and normalize
-            const data = Float32Array.from(imageData.data, d => d / 255.0);
+            // Normalize pixel values to [0, 1] and remove alpha channel
+            const data = Float32Array.from(imageData.data, (d, i) => (i + 1) % 4 ? d / 255.0 : null).filter(n => n !== null);
 
-            // Rearrange the data to [N, C, H, W]
-            // ImageData is in RGBA, we need to remove the alpha channel and then reorder
-            const channels = 3; // We are ignoring the alpha channel
-            const tensor = new Float32Array(width * height * channels);
-            let index = 0;
-            for (let i = 0; i < data.length; i += 4) {
-                // R, G, B
-                tensor[index++] = data[i];     // R
-                tensor[index++] = data[i + 1]; // G
-                tensor[index++] = data[i + 2]; // B
+            // Reorder data from [R, G, B, R, G, B, ...] to [R..., G..., B...]
+            const tensor = new Float32Array(width * height * 3);
+            for (let i = 0; i < width * height; i++) {
+                tensor[i] = data[4 * i];     // R
+                tensor[width * height + i] = data[4 * i + 1]; // G
+                tensor[2 * width * height + i] = data[4 * i + 2]; // B
             }
 
-            return new ort.Tensor('float32', tensor, [1, channels, height, width]);
+            return new ort.Tensor('float32', tensor, [1, 3, height, width]);
         }
-
 
         window.onload = loadModel;
     </script>
